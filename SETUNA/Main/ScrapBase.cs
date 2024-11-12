@@ -170,6 +170,28 @@ namespace SETUNA.Main
             DateTime = System.DateTime.Now;
             Name = DateTime.ToCustomString();
             _interpolationmode = InterpolationMode.HighQualityBicubic;
+            
+            this.MouseWheel += new System.Windows.Forms.MouseEventHandler(this.panel1_MouseWheel);
+            
+        }   private void panel1_MouseWheel(object sender, System.Windows.Forms.MouseEventArgs e)
+        {
+            // Update the drawing based upon the mouse wheel scrolling.
+            int wheelScrollLines = SystemInformation.MouseWheelScrollLines;
+            int mouseWheelScrollLines = e.Delta * wheelScrollLines / 120;
+
+            int newScale = this.Scale + mouseWheelScrollLines;
+
+            if (e.Delta > 0)
+                this.Scale = newScale + 1;
+            if (e.Delta < 0)
+                this.Scale = newScale + -1;
+
+            if (newScale > 200)
+                newScale = 200;
+            if (newScale < 10)
+                newScale = 10;
+
+            this.Scale = newScale;
         }
 
         // Token: 0x06000052 RID: 82 RVA: 0x000037B8 File Offset: 0x000019B8
