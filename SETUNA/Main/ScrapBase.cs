@@ -159,7 +159,7 @@ namespace SETUNA.Main
             base.KeyPreview = true;
             closePrepare = false;
             _dragmode = false;
-            _scale = 100;
+            _scale = 1.0f;
             _opacity = base.Opacity;
             _blTargetSet = false;
             _ptTarget = default(Point);
@@ -177,19 +177,13 @@ namespace SETUNA.Main
         {
             // Update the drawing based upon the mouse wheel scrolling.
             int wheelScrollLines = SystemInformation.MouseWheelScrollLines;
-            int mouseWheelScrollLines = e.Delta * wheelScrollLines / 120;
 
-            int newScale = this.Scale + mouseWheelScrollLines;
+            float newScale = this.Scale + e.Delta * wheelScrollLines / 120.0f / 200;
 
-            if (e.Delta > 0)
-                this.Scale = newScale + 1;
-            if (e.Delta < 0)
-                this.Scale = newScale + -1;
-
-            if (newScale > 200)
-                newScale = 200;
-            if (newScale < 10)
-                newScale = 10;
+            if (newScale > 2)
+                newScale = 2;
+            if (newScale < 0.1f)
+                newScale = 0.1f;
 
             this.Scale = newScale;
         }
@@ -527,8 +521,8 @@ namespace SETUNA.Main
 
                 var x = Left - value.All;
                 var y = Top - value.All;
-                var num = (int)(imgView.Width * (_scale / 100f)) + value.All * 2;
-                var num2 = (int)(imgView.Height * (_scale / 100f)) + value.All * 2;
+                var num = (int)(imgView.Width * (_scale)) + value.All * 2;
+                var num2 = (int)(imgView.Height * (_scale)) + value.All * 2;
                 SetBoundsCore(x, y, num, num2, BoundsSpecified.Location);
                 base.ClientSize = new Size(num, num2);
             }
@@ -624,22 +618,22 @@ namespace SETUNA.Main
         // Token: 0x1700001B RID: 27
         // (get) Token: 0x06000075 RID: 117 RVA: 0x00004342 File Offset: 0x00002542
         // (set) Token: 0x06000074 RID: 116 RVA: 0x00004294 File Offset: 0x00002494
-        public new int Scale
+        public new float Scale
         {
             get => _scale;
             set
             {
                 _scale = value;
-                if (_scale < -200)
+                if (_scale < -2)
                 {
-                    _scale = -200;
+                    _scale = -2;
                 }
-                if (_scale > 200)
+                if (_scale > 2)
                 {
-                    _scale = 200;
+                    _scale = 2;
                 }
-                base.Width = (int)(imgView.Width * (_scale / 100f)) + Padding.All * 2;
-                base.Height = (int)(imgView.Height * (_scale / 100f)) + Padding.All * 2;
+                base.Width = (int)(imgView.Width * (_scale)) + Padding.All * 2;
+                base.Height = (int)(imgView.Height * (_scale)) + Padding.All * 2;
                 Refresh();
             }
         }
@@ -1045,7 +1039,7 @@ namespace SETUNA.Main
         private DateTime _datetime;
 
         // Token: 0x04000028 RID: 40
-        private int _scale;
+        private float _scale;
 
         // Token: 0x04000029 RID: 41
         private bool _solidframe;

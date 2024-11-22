@@ -75,11 +75,11 @@ namespace SETUNA.Main.StyleItems
         {
             if (_fixed == CScaleStyleItem.ScaleSetType.Fixed)
             {
-                scrap.Scale = _scalevalue;
+                scrap.Scale = _scalevalue / 100.0f;
             }
             else
             {
-                scrap.Scale += _scalevalue;
+                scrap.Scale += _scalevalue / 100.0f;
             }
             if (_interpolationmode != InterpolationMode.Invalid)
             {
