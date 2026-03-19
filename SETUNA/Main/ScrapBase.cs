@@ -183,14 +183,14 @@ namespace SETUNA.Main
             }
 
             int wheelScrollLines = SystemInformation.MouseWheelScrollLines;
-            float newScale = this.Scale + e.Delta * wheelScrollLines / 120.0f / 200;
+            var scaleStep = e.Delta * wheelScrollLines / 120.0f;
+            if ((ModifierKeys & Keys.Alt) == Keys.Alt)
+            {
+                ZoomAt(PointToClient(Cursor.Position), scaleStep / 800.0f);
+                return;
+            }
 
-            if (newScale > 2)
-                newScale = 2;
-            if (newScale < 0.1f)
-                newScale = 0.1f;
-
-            this.Scale = newScale;
+            ZoomAt(PointToClient(Cursor.Position), scaleStep / 200.0f);
         }
 
         private void AdjustDisplayOpacity(double delta)
@@ -219,6 +219,38 @@ namespace SETUNA.Main
             }
 
             Opacity = newOpacity;
+        }
+
+        private void ZoomAt(Point clientPoint, float scaleDelta)
+        {
+            if (imgView == null)
+            {
+                return;
+            }
+
+            var oldScale = Scale;
+            var newScale = oldScale + scaleDelta;
+            if (newScale > 2.0f)
+            {
+                newScale = 2.0f;
+            }
+            if (newScale < 0.1f)
+            {
+                newScale = 0.1f;
+            }
+            if (Math.Abs(newScale - oldScale) < float.Epsilon)
+            {
+                return;
+            }
+
+            var imagePointX = (clientPoint.X - Padding.Left) / oldScale;
+            var imagePointY = (clientPoint.Y - Padding.Top) / oldScale;
+            var newLeft = Left + clientPoint.X - Padding.Left - imagePointX * newScale;
+            var newTop = Top + clientPoint.Y - Padding.Top - imagePointY * newScale;
+
+            Scale = newScale;
+            Left = (int)Math.Round(newLeft);
+            Top = (int)Math.Round(newTop);
         }
 
         // Token: 0x06000052 RID: 82 RVA: 0x000037B8 File Offset: 0x000019B8
