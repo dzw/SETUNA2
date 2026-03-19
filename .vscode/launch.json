@@ -1,0 +1,14 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Launch SETUNA",
+      "type": "clr",
+      "request": "launch",
+      "program": "${workspaceFolder}\\SETUNA\\bin\\x64\\Debug\\SETUNA.exe",
+      "cwd": "${workspaceFolder}\\SETUNA",
+      "preLaunchTask": "build",
+      "stopAtEntry": false
+    }
+  ]
+}
