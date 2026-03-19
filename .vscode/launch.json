@@ -2,13 +2,12 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Launch SETUNA",
-      "type": "clr",
+      "name": "Run SETUNA",
+      "type": "node-terminal",
       "request": "launch",
-      "program": "${workspaceFolder}\\SETUNA\\bin\\x64\\Debug\\SETUNA.exe",
+      "command": "& \"${workspaceFolder}\\SETUNA\\bin\\x64\\Debug\\SETUNA.exe\"",
       "cwd": "${workspaceFolder}\\SETUNA",
-      "preLaunchTask": "build",
-      "stopAtEntry": false
+      "preLaunchTask": "build"
     }
   ]
 }
