@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -170,14 +170,19 @@ namespace SETUNA.Main
             DateTime = System.DateTime.Now;
             Name = DateTime.ToCustomString();
             _interpolationmode = InterpolationMode.HighQualityBicubic;
-            
-            this.MouseWheel += new System.Windows.Forms.MouseEventHandler(this.panel1_MouseWheel);
-            
-        }   private void panel1_MouseWheel(object sender, System.Windows.Forms.MouseEventArgs e)
-        {
-            // Update the drawing based upon the mouse wheel scrolling.
-            int wheelScrollLines = SystemInformation.MouseWheelScrollLines;
 
+            this.MouseWheel += new System.Windows.Forms.MouseEventHandler(this.panel1_MouseWheel);
+        }
+
+        private void panel1_MouseWheel(object sender, System.Windows.Forms.MouseEventArgs e)
+        {
+            if ((ModifierKeys & Keys.Shift) == Keys.Shift)
+            {
+                AdjustDisplayOpacity(e.Delta / 120.0 * 0.05);
+                return;
+            }
+
+            int wheelScrollLines = SystemInformation.MouseWheelScrollLines;
             float newScale = this.Scale + e.Delta * wheelScrollLines / 120.0f / 200;
 
             if (newScale > 2)
@@ -186,6 +191,34 @@ namespace SETUNA.Main
                 newScale = 0.1f;
 
             this.Scale = newScale;
+        }
+
+        private void AdjustDisplayOpacity(double delta)
+        {
+            var newOpacity = Opacity + delta;
+            if (newOpacity > 1.0)
+            {
+                newOpacity = 1.0;
+            }
+            if (newOpacity < 0.01)
+            {
+                newOpacity = 0.01;
+            }
+
+            if (ActiveForm == this)
+            {
+                ActiveOpacity = newOpacity;
+            }
+            else if (_isMouseEnter)
+            {
+                RollOverOpacity = newOpacity;
+            }
+            else
+            {
+                InactiveOpacity = newOpacity;
+            }
+
+            Opacity = newOpacity;
         }
 
         // Token: 0x06000052 RID: 82 RVA: 0x000037B8 File Offset: 0x000019B8

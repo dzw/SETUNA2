@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
@@ -150,6 +150,19 @@ namespace SETUNA.Main.Option
             });
             cstyle.AddKeyItem(Keys.R);
             var styleID5 = cstyle.StyleID;
+            setunaOption.Styles.Add(cstyle);
+            cstyle = new CStyle
+            {
+                StyleID = num++,
+                StyleName = "恢复不透明度"
+            };
+            cstyle.AddStyle(new COpacityStyleItem
+            {
+                Absolute = true,
+                Opacity = 100
+            });
+            cstyle.AddKeyItem(Keys.O);
+            var styleIDOpacityReset = cstyle.StyleID;
             setunaOption.Styles.Add(cstyle);
             cstyle = new CStyle
             {
@@ -556,6 +569,7 @@ namespace SETUNA.Main.Option
             setunaOption.Scrap.SubMenuStyles.Add(styleID2);
             setunaOption.Scrap.SubMenuStyles.Add(styleID3);
             setunaOption.Scrap.SubMenuStyles.Add(styleID4);
+            setunaOption.Scrap.SubMenuStyles.Add(styleIDOpacityReset);
             setunaOption.Scrap.SubMenuStyles.Add(new CSeparatorStyle().StyleID);
             setunaOption.Scrap.SubMenuStyles.Add(styleID10);
             setunaOption.Scrap.SubMenuStyles.Add(styleID11);
