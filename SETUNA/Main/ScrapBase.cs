@@ -172,6 +172,121 @@ namespace SETUNA.Main
             _interpolationmode = InterpolationMode.HighQualityBicubic;
 
             this.MouseWheel += new System.Windows.Forms.MouseEventHandler(this.panel1_MouseWheel);
+            InitializeLockButtonForm();
+        }
+
+        private void InitializeLockButtonForm()
+        {
+            if (_lockButtonForm != null && !_lockButtonForm.IsDisposed)
+            {
+                return;
+            }
+
+            _lockButtonForm = new LockButtonForm();
+            _lockButtonForm.ToggleRequested += lockButtonForm_ToggleRequested;
+            _lockButtonForm.Locked = _mousePassthroughLocked;
+        }
+
+        private void lockButtonForm_ToggleRequested(object sender, EventArgs e)
+        {
+            SetMousePassthroughLocked(!_mousePassthroughLocked);
+        }
+
+        private void SetMousePassthroughLocked(bool locked)
+        {
+            if (_mousePassthroughLocked == locked)
+            {
+                return;
+            }
+
+            _mousePassthroughLocked = locked;
+            if (locked)
+            {
+                _lockedOpacity = Opacity;
+            }
+            if (_lockButtonForm != null && !_lockButtonForm.IsDisposed)
+            {
+                _lockButtonForm.Locked = locked;
+            }
+
+            UpdateMousePassthroughStyle();
+            ApplyOpacityForCurrentState();
+        }
+
+        private void UpdateMousePassthroughStyle()
+        {
+            if (!IsHandleCreated)
+            {
+                return;
+            }
+
+            var exStyle = GetWindowLong(Handle, GWL_EXSTYLE);
+            if (_mousePassthroughLocked)
+            {
+                exStyle |= WS_EX_TRANSPARENT;
+            }
+            else
+            {
+                exStyle &= ~WS_EX_TRANSPARENT;
+            }
+
+            SetWindowLong(Handle, GWL_EXSTYLE, exStyle);
+            SetWindowPos(Handle, IntPtr.Zero, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
+        }
+
+        private void UpdateLockButtonLocation()
+        {
+            if (_lockButtonForm == null || _lockButtonForm.IsDisposed)
+            {
+                return;
+            }
+
+            var x = Left + (Width - _lockButtonForm.Width) / 2;
+            var y = Top - _lockButtonForm.Height - 4;
+            if (y < 0)
+            {
+                y = Top;
+            }
+
+            _lockButtonForm.Location = new Point(Math.Max(0, x), Math.Max(0, y));
+        }
+
+        private void UpdateLockButtonVisibility()
+        {
+            if (_lockButtonForm == null || _lockButtonForm.IsDisposed)
+            {
+                return;
+            }
+
+            if (base.Visible)
+            {
+                UpdateLockButtonLocation();
+                if (!_lockButtonForm.Visible)
+                {
+                    _lockButtonForm.Show(this);
+                }
+            }
+            else
+            {
+                _lockButtonForm.Hide();
+            }
+        }
+
+        private void ApplyOpacityForCurrentState()
+        {
+            if (_mousePassthroughLocked)
+            {
+                Opacity = _lockedOpacity;
+                return;
+            }
+
+            if (Focused || ActiveForm == this)
+            {
+                Opacity = ActiveOpacity;
+                return;
+            }
+
+            Opacity = _isMouseEnter ? RollOverOpacity : InactiveOpacity;
         }
 
         private void panel1_MouseWheel(object sender, System.Windows.Forms.MouseEventArgs e)
@@ -297,6 +412,9 @@ namespace SETUNA.Main
         // Token: 0x0600005A RID: 90
         [DllImport("user32.dll")]
         private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
+
+        [DllImport("user32.dll")]
+        private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int x, int y, int cx, int cy, uint uFlags);
 
         // Token: 0x0600005B RID: 91 RVA: 0x00003A08 File Offset: 0x00001C08
         private void timOpacity_Tick(object sender, EventArgs e)
@@ -618,6 +736,17 @@ namespace SETUNA.Main
         // Token: 0x0600006B RID: 107 RVA: 0x000041C9 File Offset: 0x000023C9
         protected override void OnClosed(EventArgs e)
         {
+            if (_lockButtonForm != null)
+            {
+                _lockButtonForm.ToggleRequested -= lockButtonForm_ToggleRequested;
+                if (!_lockButtonForm.IsDisposed)
+                {
+                    _lockButtonForm.Hide();
+                    _lockButtonForm.Dispose();
+                }
+                _lockButtonForm = null;
+            }
+
             ImageAllDispose();
             _applyFinished = null;
 
@@ -797,7 +926,8 @@ namespace SETUNA.Main
             }
 
             ActiveForm = this;
-            Opacity = ActiveOpacity;
+            ApplyOpacityForCurrentState();
+            UpdateMousePassthroughStyle();
         }
 
         // Token: 0x0600007F RID: 127 RVA: 0x00004538 File Offset: 0x00002738
@@ -807,10 +937,9 @@ namespace SETUNA.Main
             {
                 ScrapInactiveEvent(sender, new ScrapEventArgs(this));
             }
-            if (!_isMouseEnter)
-            {
-                Opacity = InactiveOpacity;
-            }
+
+            ApplyOpacityForCurrentState();
+            UpdateMousePassthroughStyle();
         }
 
         // Token: 0x06000080 RID: 128 RVA: 0x00004568 File Offset: 0x00002768
@@ -821,10 +950,8 @@ namespace SETUNA.Main
             {
                 ScrapInactiveEnterEvent(sender, new ScrapEventArgs(this));
             }
-            if (ActiveForm != this)
-            {
-                Opacity = RollOverOpacity;
-            }
+
+            ApplyOpacityForCurrentState();
         }
 
         // Token: 0x06000081 RID: 129 RVA: 0x000045A7 File Offset: 0x000027A7
@@ -835,10 +962,8 @@ namespace SETUNA.Main
             {
                 ScrapInactiveOutEvent(sender, new ScrapEventArgs(this));
             }
-            if (ActiveForm != this)
-            {
-                Opacity = InactiveOpacity;
-            }
+
+            ApplyOpacityForCurrentState();
         }
 
         // Token: 0x06000082 RID: 130 RVA: 0x000045E6 File Offset: 0x000027E6
@@ -1058,6 +1183,7 @@ namespace SETUNA.Main
         protected override void OnLocationChanged(EventArgs e)
         {
             base.OnLocationChanged(e);
+            UpdateLockButtonLocation();
 
             if (ScrapLocationChangedEvent != null)
             {
@@ -1068,11 +1194,20 @@ namespace SETUNA.Main
 
         private void ScrapBase_SizeChanged(object sender, EventArgs e)
         {
+            UpdateLockButtonLocation();
         }
 
         private void ScrapBase_VisibleChanged(object sender, EventArgs e)
         {
             _visible = Visible;
+            UpdateLockButtonVisibility();
+        }
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+            UpdateMousePassthroughStyle();
+            UpdateLockButtonVisibility();
         }
 
 
@@ -1085,8 +1220,20 @@ namespace SETUNA.Main
         // Token: 0x04000021 RID: 33
         private const int WS_EX_LAYERED = 524288;
 
+        private const int WS_EX_TRANSPARENT = 32;
+
+        private const int WS_EX_TOOLWINDOW = 128;
+
         // Token: 0x04000022 RID: 34
         private const int GWL_EXSTYLE = -20;
+
+        private const uint SWP_NOSIZE = 1U;
+
+        private const uint SWP_NOMOVE = 2U;
+
+        private const uint SWP_NOZORDER = 4U;
+
+        private const uint SWP_FRAMECHANGED = 32U;
 
         // Token: 0x04000023 RID: 35
         public ScrapBook _parent;
@@ -1178,6 +1325,12 @@ namespace SETUNA.Main
 
         private Action _applyFinished;
 
+        private bool _mousePassthroughLocked;
+
+        private LockButtonForm _lockButtonForm;
+
+        private double _lockedOpacity;
+
         // Token: 0x0200002B RID: 43
         // (Invoke) Token: 0x060001A6 RID: 422
         public delegate void ScrapEventHandler(object sender, ScrapEventArgs e);
@@ -1187,6 +1340,106 @@ namespace SETUNA.Main
         public delegate void ScrapSubMenuHandler(object sender, ScrapMenuArgs e);
 
         private bool _visible = true;
+
+        private sealed class LockButtonForm : Form
+        {
+            public event EventHandler ToggleRequested;
+
+            public bool Locked
+            {
+                get => _locked;
+                set
+                {
+                    if (_locked == value)
+                    {
+                        return;
+                    }
+
+                    _locked = value;
+                    Invalidate();
+                }
+            }
+
+            public LockButtonForm()
+            {
+                AutoScaleMode = AutoScaleMode.None;
+                ClientSize = new Size(52, 22);
+                DoubleBuffered = true;
+                FormBorderStyle = FormBorderStyle.None;
+                ShowInTaskbar = false;
+                StartPosition = FormStartPosition.Manual;
+                TopMost = true;
+                Cursor = Cursors.Hand;
+                Font = new Font(SystemFonts.MessageBoxFont.FontFamily, 8f, FontStyle.Bold);
+            }
+
+            protected override bool ShowWithoutActivation => true;
+
+            protected override CreateParams CreateParams
+            {
+                get
+                {
+                    var cp = base.CreateParams;
+                    cp.ExStyle |= WS_EX_TOOLWINDOW;
+                    return cp;
+                }
+            }
+
+            protected override void OnMouseClick(MouseEventArgs e)
+            {
+                base.OnMouseClick(e);
+                if (e.Button == MouseButtons.Left && ToggleRequested != null)
+                {
+                    ToggleRequested(this, EventArgs.Empty);
+                }
+            }
+
+            protected override void OnMouseEnter(EventArgs e)
+            {
+                base.OnMouseEnter(e);
+                _hover = true;
+                Invalidate();
+            }
+
+            protected override void OnMouseLeave(EventArgs e)
+            {
+                base.OnMouseLeave(e);
+                _hover = false;
+                Invalidate();
+            }
+
+            protected override void OnPaint(PaintEventArgs e)
+            {
+                base.OnPaint(e);
+
+                e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+                var rect = new Rectangle(0, 0, Width - 1, Height - 1);
+                var backColor = Locked ? Color.FromArgb(66, 122, 161) : Color.FromArgb(90, 90, 90);
+                if (_hover)
+                {
+                    backColor = ControlPaint.Light(backColor);
+                }
+
+                using (var brush = new SolidBrush(backColor))
+                using (var pen = new Pen(Color.White))
+                {
+                    e.Graphics.FillRectangle(brush, rect);
+                    e.Graphics.DrawRectangle(pen, rect);
+                }
+
+                TextRenderer.DrawText(
+                    e.Graphics,
+                    Locked ? "解锁" : "锁定",
+                    Font,
+                    rect,
+                    Color.White,
+                    TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine);
+            }
+
+            private bool _locked;
+
+            private bool _hover;
+        }
 
     }
 }
