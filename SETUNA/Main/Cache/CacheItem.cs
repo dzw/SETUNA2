@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -16,6 +16,10 @@ namespace SETUNA.Main.Cache
         public DateTime CreateTime { set; get; }
         // 位置
         public Point Position { set; get; }
+        // 当前缩放
+        public float Scale { set; get; }
+        // 当前透明度
+        public double Opacity { set; get; }
         // 样式
         public Style Style { set; get; }
         // 排序值
@@ -36,16 +40,20 @@ namespace SETUNA.Main.Cache
 
         protected CacheItem()
         {
+            Scale = 1.0f;
+            Opacity = 1.0;
         }
 
 
         // 创建缓存
-        public static CacheItem Create(DateTime createTime, Image image, Point pos, Style style)
+        public static CacheItem Create(DateTime createTime, Image image, Point pos, Style style, float scale, double opacity)
         {
             var item = new CacheItem
             {
                 CreateTime = createTime,
                 Position = pos,
+                Scale = scale,
+                Opacity = opacity,
                 Style = style
             };
 
@@ -63,6 +71,17 @@ namespace SETUNA.Main.Cache
             {
                 var content = File.ReadAllText(fullPath);
                 var item = JsonConvert.DeserializeObject<CacheItem>(content);
+                if (item != null)
+                {
+                    if (item.Scale <= 0.0f)
+                    {
+                        item.Scale = 1.0f;
+                    }
+                    if (item.Opacity <= 0.0 || item.Opacity > 1.0)
+                    {
+                        item.Opacity = 1.0;
+                    }
+                }
 
                 return item;
             }
@@ -124,6 +143,8 @@ namespace SETUNA.Main.Cache
             {
                 CreateTime = CreateTime,
                 Position = Position,
+                Scale = Scale,
+                Opacity = Opacity,
                 Style = Style,
                 SortingOrder = SortingOrder,
             };

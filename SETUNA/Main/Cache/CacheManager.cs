@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 
@@ -87,7 +87,7 @@ namespace SETUNA.Main.Cache
                 ClickPoint = scrap.StyleClickPoint
             };
 
-            var cacheItem = CacheItem.Create(scrap.DateTime, scrap.Image, scrap.Location, style);
+            var cacheItem = CacheItem.Create(scrap.DateTime, scrap.Image, scrap.Location, style, scrap.Scale, scrap.CurrentDisplayOpacity);
             scrap.CacheItem = cacheItem;
         }
 
@@ -114,6 +114,8 @@ namespace SETUNA.Main.Cache
             }
 
             cacheItem.Position = scrap.Location;
+            cacheItem.Scale = scrap.Scale;
+            cacheItem.Opacity = scrap.CurrentDisplayOpacity;
             cacheItem.SaveInfo();
         }
 
@@ -141,6 +143,9 @@ namespace SETUNA.Main.Cache
             }
 
             cacheItem.Style = new Style(styleID, scrap.StyleClickPoint);
+            cacheItem.Position = scrap.Location;
+            cacheItem.Scale = scrap.Scale;
+            cacheItem.Opacity = scrap.CurrentDisplayOpacity;
             cacheItem.SaveInfo();
         }
 
@@ -154,6 +159,9 @@ namespace SETUNA.Main.Cache
             }
 
             cacheItem.Style = new Style(0, new System.Drawing.Point(0, 0));
+            cacheItem.Position = scrap.Location;
+            cacheItem.Scale = scrap.Scale;
+            cacheItem.Opacity = scrap.CurrentDisplayOpacity;
             cacheItem.SaveInfo();
         }
     }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
@@ -150,6 +150,7 @@ namespace SETUNA.Main
             {
                 scrapBase.ApplyStylesFromCache(cstyle, style.ClickPoint, () =>
                 {
+                    scrapBase.RestoreCachedViewState(cacheItem);
                     AddScrapThenDo(scrapBase, scrapBase.GetVisibleFlag());
                     addFinished?.Invoke();
                 });
@@ -160,6 +161,7 @@ namespace SETUNA.Main
 
             if (cstyle == null)
             {
+                scrapBase.RestoreCachedViewState(cacheItem);
                 AddScrapThenDo(scrapBase);
                 addFinished?.Invoke();
             }

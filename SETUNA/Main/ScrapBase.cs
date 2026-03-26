@@ -334,6 +334,7 @@ namespace SETUNA.Main
             }
 
             Opacity = newOpacity;
+            SaveCurrentStateToCache();
         }
 
         private void ZoomAt(Point clientPoint, float scaleDelta)
@@ -829,6 +830,7 @@ namespace SETUNA.Main
                 base.Width = (int)(imgView.Width * (_scale)) + Padding.All * 2;
                 base.Height = (int)(imgView.Height * (_scale)) + Padding.All * 2;
                 Refresh();
+                SaveCurrentStateToCache();
             }
         }
 
@@ -842,7 +844,38 @@ namespace SETUNA.Main
             get => _cacheItem;
         }
 
+        public double CurrentDisplayOpacity => _mousePassthroughLocked ? _lockedOpacity : _opacity;
+
         public Form StyleForm { set; get; }
+
+        public void RestoreCachedViewState(Cache.CacheItem cacheItem)
+        {
+            if (cacheItem == null)
+            {
+                return;
+            }
+
+            ActiveOpacity = cacheItem.Opacity;
+            InactiveOpacity = cacheItem.Opacity;
+            RollOverOpacity = cacheItem.Opacity;
+            _lockedOpacity = cacheItem.Opacity;
+            Scale = cacheItem.Scale;
+            Location = cacheItem.Position;
+            Opacity = cacheItem.Opacity;
+        }
+
+        private void SaveCurrentStateToCache()
+        {
+            if (_cacheItem == null)
+            {
+                return;
+            }
+
+            _cacheItem.Position = Location;
+            _cacheItem.Scale = Scale;
+            _cacheItem.Opacity = CurrentDisplayOpacity;
+            _cacheItem.SaveInfo();
+        }
 
         // Token: 0x06000076 RID: 118 RVA: 0x0000434A File Offset: 0x0000254A
         private void DragStart(Point pt)
@@ -1113,6 +1146,7 @@ namespace SETUNA.Main
                 }
             }
             IsStyleApply = false;
+            SaveCurrentStateToCache();
         IL_AD:
             if (!IsStyleApply && !Initialized)
             {
